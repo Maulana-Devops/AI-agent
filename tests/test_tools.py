@@ -217,3 +217,28 @@ def test_get_file_info_directory(tmp_path):
     assert result["name"] == "example-dir"
     assert result["type"] == "directory"
     assert result["extension"] == ""
+
+
+def test_list_directory_recursive(tmp_path):
+    (tmp_path / "root.txt").write_text("root")
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (sub / "nested.txt").write_text("nested")
+
+    tool = get_tool("list_directory")
+    result = tool["function"](str(tmp_path), recursive=True)
+
+    assert "root.txt" in result
+    assert "sub" in result
+    assert "sub/nested.txt" in result
+
+
+def test_list_directory_extension_filter(tmp_path):
+    (tmp_path / "one.txt").write_text("1")
+    (tmp_path / "two.py").write_text("2")
+    (tmp_path / "three.txt").write_text("3")
+
+    tool = get_tool("list_directory")
+    result = tool["function"](str(tmp_path), extension=".txt")
+
+    assert result == ["one.txt", "three.txt"]

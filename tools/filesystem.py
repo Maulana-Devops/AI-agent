@@ -6,8 +6,12 @@ def get_current_directory() -> str:
     return str(Path.cwd())
 
 
-def list_directory(path: str = ".") -> list[str]:
-    """List files and directories in a directory without modifying anything."""
+def list_directory(
+    path: str = ".",
+    recursive: bool = False,
+    extension: str | None = None,
+) -> list[str]:
+    """List files and directories with optional recursion and extension filtering."""
     target = Path(path).resolve()
 
     if not target.exists():
@@ -16,7 +20,21 @@ def list_directory(path: str = ".") -> list[str]:
     if not target.is_dir():
         raise NotADirectoryError(f"Bukan directory: {target}")
 
-    return sorted(item.name for item in target.iterdir())
+    entries = target.rglob("*") if recursive else target.iterdir()
+
+    result = []
+
+    for item in entries:
+        if extension and item.is_file():
+            normalized = extension if extension.startswith(".") else f".{extension}"
+            if item.suffix != normalized:
+                continue
+
+        result.append(
+            str(item.relative_to(target))
+        )
+
+    return sorted(result)
 
 
 def read_file(path: str) -> str:
