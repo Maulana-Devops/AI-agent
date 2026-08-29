@@ -59,3 +59,20 @@ def delete_file(path: str) -> str:
 
     target.unlink()
     return str(target)
+
+
+def move_file(source: str, destination: str) -> str:
+    """Move or rename a file."""
+    source_path = Path(source).resolve()
+    destination_path = Path(destination).resolve()
+
+    if not source_path.exists():
+        raise FileNotFoundError(f"Tidak ditemukan: {source_path}")
+
+    if not source_path.is_file():
+        raise IsADirectoryError(f"Bukan file: {source_path}")
+
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+    source_path.rename(destination_path)
+
+    return str(destination_path)

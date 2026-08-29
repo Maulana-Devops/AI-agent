@@ -66,3 +66,35 @@ def test_modify_command_mkdir_with_confirmation_executed(tmp_path):
     assert result.risk == RiskLevel.MODIFY
     assert result.executed is True
     assert (tmp_path / "new-dir").exists()
+
+
+def test_modify_command_mv_without_confirmation_not_executed(tmp_path):
+    source = tmp_path / "source.txt"
+    destination = tmp_path / "destination.txt"
+    source.write_text("hello")
+
+    result = executor.execute(
+        f"mv {source} {destination}",
+        confirmed=False,
+    )
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is False
+    assert source.exists()
+    assert not destination.exists()
+
+
+def test_modify_command_mv_with_confirmation_executed(tmp_path):
+    source = tmp_path / "source.txt"
+    destination = tmp_path / "destination.txt"
+    source.write_text("hello")
+
+    result = executor.execute(
+        f"mv {source} {destination}",
+        confirmed=True,
+    )
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is True
+    assert not source.exists()
+    assert destination.exists()

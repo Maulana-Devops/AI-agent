@@ -131,3 +131,10 @@ def test_registry_delete_file_tool():
 
     assert tool is not None
     assert tool["risk"] == "modify"
+
+
+def test_registry_move_file_tool():
+    tool = get_tool("move_file")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"

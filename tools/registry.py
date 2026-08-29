@@ -4,6 +4,7 @@ from tools.filesystem import (
     read_file,
     create_directory,
     delete_file,
+    move_file,
     write_file,
 )
 
@@ -87,6 +88,25 @@ TOOLS = {
                 },
             },
             "required": ["path", "content"],
+        },
+    },
+    "move_file": {
+        "description": "Move or rename a file.",
+        "risk": "modify",
+        "function": move_file,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "Path of the source file.",
+                },
+                "destination": {
+                    "type": "string",
+                    "description": "Path of the destination file.",
+                },
+            },
+            "required": ["source", "destination"],
         },
     },
     "delete_file": {
