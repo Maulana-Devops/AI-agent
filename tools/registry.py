@@ -5,6 +5,7 @@ from tools.filesystem import (
     create_directory,
     delete_file,
     move_file,
+    copy_file,
     write_file,
 )
 
@@ -88,6 +89,25 @@ TOOLS = {
                 },
             },
             "required": ["path", "content"],
+        },
+    },
+    "copy_file": {
+        "description": "Copy a file to a new destination.",
+        "risk": "modify",
+        "function": copy_file,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "Path of the source file.",
+                },
+                "destination": {
+                    "type": "string",
+                    "description": "Path of the destination file.",
+                },
+            },
+            "required": ["source", "destination"],
         },
     },
     "move_file": {

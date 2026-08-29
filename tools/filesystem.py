@@ -76,3 +76,22 @@ def move_file(source: str, destination: str) -> str:
     source_path.rename(destination_path)
 
     return str(destination_path)
+
+
+def copy_file(source: str, destination: str) -> str:
+    """Copy a file to a new destination."""
+    import shutil
+
+    source_path = Path(source).resolve()
+    destination_path = Path(destination).resolve()
+
+    if not source_path.exists():
+        raise FileNotFoundError(f"Tidak ditemukan: {source_path}")
+
+    if not source_path.is_file():
+        raise IsADirectoryError(f"Bukan file: {source_path}")
+
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, destination_path)
+
+    return str(destination_path)

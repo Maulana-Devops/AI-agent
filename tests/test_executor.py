@@ -98,3 +98,36 @@ def test_modify_command_mv_with_confirmation_executed(tmp_path):
     assert result.executed is True
     assert not source.exists()
     assert destination.exists()
+
+
+def test_modify_command_cp_without_confirmation_not_executed(tmp_path):
+    source = tmp_path / "source.txt"
+    destination = tmp_path / "copy.txt"
+    source.write_text("hello")
+
+    result = executor.execute(
+        f"cp {source} {destination}",
+        confirmed=False,
+    )
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is False
+    assert source.exists()
+    assert not destination.exists()
+
+
+def test_modify_command_cp_with_confirmation_executed(tmp_path):
+    source = tmp_path / "source.txt"
+    destination = tmp_path / "copy.txt"
+    source.write_text("hello")
+
+    result = executor.execute(
+        f"cp {source} {destination}",
+        confirmed=True,
+    )
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is True
+    assert source.exists()
+    assert destination.exists()
+    assert destination.read_text() == "hello"

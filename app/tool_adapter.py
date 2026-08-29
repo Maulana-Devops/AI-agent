@@ -21,6 +21,17 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "copy_file": {
+        "source": {
+            "type": "string",
+            "description": "Path of the source file.",
+        },
+        "destination": {
+            "type": "string",
+            "description": "Path of the destination file.",
+        },
+    },
+
     "move_file": {
         "source": {
             "type": "string",

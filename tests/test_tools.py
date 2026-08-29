@@ -138,3 +138,10 @@ def test_registry_move_file_tool():
 
     assert tool is not None
     assert tool["risk"] == "modify"
+
+
+def test_registry_copy_file_tool():
+    tool = get_tool("copy_file")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"
