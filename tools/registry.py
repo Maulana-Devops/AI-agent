@@ -2,6 +2,7 @@ from tools.filesystem import (
     get_current_directory,
     list_directory,
     read_file,
+    create_directory,
 )
 
 from tools.git import (
@@ -47,6 +48,21 @@ TOOLS = {
                 "path": {
                     "type": "string",
                     "description": "Path of the text file to read.",
+                },
+            },
+            "required": ["path"],
+        },
+    },
+    "create_directory": {
+        "description": "Create a new directory.",
+        "risk": "modify",
+        "function": create_directory,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the directory to create.",
                 },
             },
             "required": ["path"],

@@ -3,6 +3,12 @@ from tools.registry import list_tools
 
 TOOL_PARAMETERS = {
     "get_current_directory": {},
+    "create_directory": {
+        "path": {
+            "type": "string",
+            "description": "Path of the directory to create.",
+        },
+    },
 
     "list_directory": {
         "path": {

@@ -47,3 +47,22 @@ def test_unknown_command_requires_confirmation():
 
     assert result.risk == RiskLevel.MODIFY
     assert result.executed is False
+
+
+def test_modify_command_mkdir_without_confirmation_not_executed(tmp_path):
+    result = executor.execute("mkdir " + str(tmp_path / "new-dir"), confirmed=False)
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is False
+    assert not (tmp_path / "new-dir").exists()
+
+
+def test_modify_command_mkdir_with_confirmation_executed(tmp_path):
+    result = executor.execute(
+        "mkdir " + str(tmp_path / "new-dir"),
+        confirmed=True,
+    )
+
+    assert result.risk == RiskLevel.MODIFY
+    assert result.executed is True
+    assert (tmp_path / "new-dir").exists()

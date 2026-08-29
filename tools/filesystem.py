@@ -7,7 +7,7 @@ def get_current_directory() -> str:
 
 
 def list_directory(path: str = ".") -> list[str]:
-    """List entries in a directory without modifying anything."""
+    """List files and directories in a directory without modifying anything."""
     target = Path(path).resolve()
 
     if not target.exists():
@@ -30,3 +30,10 @@ def read_file(path: str) -> str:
         raise IsADirectoryError(f"Bukan file: {target}")
 
     return target.read_text(encoding="utf-8")
+
+
+def create_directory(path: str) -> str:
+    """Create a new directory."""
+    target = Path(path).resolve()
+    target.mkdir(parents=True, exist_ok=True)
+    return str(target)

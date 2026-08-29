@@ -25,3 +25,8 @@ def test_dangerous_command():
 def test_unknown_command_is_not_trusted():
     assert classify_command("some-unknown-command") == RiskLevel.MODIFY
     assert requires_confirmation("some-unknown-command")
+
+
+def test_modify_command_mkdir():
+    assert classify_command("mkdir /tmp/test-dir") == RiskLevel.MODIFY
+    assert requires_confirmation("mkdir /tmp/test-dir")

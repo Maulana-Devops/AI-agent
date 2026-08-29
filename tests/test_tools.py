@@ -110,3 +110,10 @@ def test_registry_functions_are_callable():
 
         assert tool is not None
         assert callable(tool["function"])
+
+
+def test_registry_create_directory_tool():
+    tool = get_tool("create_directory")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"
