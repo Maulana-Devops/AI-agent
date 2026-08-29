@@ -45,3 +45,17 @@ def write_file(path: str, content: str) -> str:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
     return str(target)
+
+
+def delete_file(path: str) -> str:
+    """Delete a file."""
+    target = Path(path).resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"Tidak ditemukan: {target}")
+
+    if not target.is_file():
+        raise IsADirectoryError(f"Bukan file: {target}")
+
+    target.unlink()
+    return str(target)

@@ -124,3 +124,10 @@ def test_registry_write_file_tool():
 
     assert tool is not None
     assert tool["risk"] == "modify"
+
+
+def test_registry_delete_file_tool():
+    tool = get_tool("delete_file")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"

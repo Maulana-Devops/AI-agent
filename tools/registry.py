@@ -3,6 +3,7 @@ from tools.filesystem import (
     list_directory,
     read_file,
     create_directory,
+    delete_file,
     write_file,
 )
 
@@ -86,6 +87,21 @@ TOOLS = {
                 },
             },
             "required": ["path", "content"],
+        },
+    },
+    "delete_file": {
+        "description": "Delete a file.",
+        "risk": "modify",
+        "function": delete_file,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the file to delete.",
+                },
+            },
+            "required": ["path"],
         },
     },
     "git_status": {

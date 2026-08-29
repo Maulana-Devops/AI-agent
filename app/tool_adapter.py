@@ -21,6 +21,13 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "delete_file": {
+        "path": {
+            "type": "string",
+            "description": "Path of the file to delete.",
+        },
+    },
+
     "list_directory": {
         "path": {
             "type": "string",
