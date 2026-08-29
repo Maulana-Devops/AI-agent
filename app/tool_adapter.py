@@ -10,6 +10,17 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "write_file": {
+        "path": {
+            "type": "string",
+            "description": "Path of the file to write.",
+        },
+        "content": {
+            "type": "string",
+            "description": "Text content to write.",
+        },
+    },
+
     "list_directory": {
         "path": {
             "type": "string",

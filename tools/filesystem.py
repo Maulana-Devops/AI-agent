@@ -37,3 +37,11 @@ def create_directory(path: str) -> str:
     target = Path(path).resolve()
     target.mkdir(parents=True, exist_ok=True)
     return str(target)
+
+
+def write_file(path: str, content: str) -> str:
+    """Write text content to a file."""
+    target = Path(path).resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+    return str(target)

@@ -3,6 +3,7 @@ from tools.filesystem import (
     list_directory,
     read_file,
     create_directory,
+    write_file,
 )
 
 from tools.git import (
@@ -66,6 +67,25 @@ TOOLS = {
                 },
             },
             "required": ["path"],
+        },
+    },
+    "write_file": {
+        "description": "Write text content to a file.",
+        "risk": "modify",
+        "function": write_file,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the file to write.",
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Text content to write.",
+                },
+            },
+            "required": ["path", "content"],
         },
     },
     "git_status": {
