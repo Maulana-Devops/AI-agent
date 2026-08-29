@@ -145,3 +145,17 @@ def test_registry_copy_file_tool():
 
     assert tool is not None
     assert tool["risk"] == "modify"
+
+
+def test_registry_delete_directory_tool():
+    tool = get_tool("delete_directory")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"
+
+
+def test_registry_delete_directory_tool():
+    tool = get_tool("delete_directory")
+
+    assert tool is not None
+    assert tool["risk"] == "modify"

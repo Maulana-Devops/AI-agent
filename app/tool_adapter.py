@@ -43,6 +43,20 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "delete_directory": {
+        "path": {
+            "type": "string",
+            "description": "Path of the directory to delete.",
+        },
+    },
+
+    "delete_directory": {
+        "path": {
+            "type": "string",
+            "description": "Path of the directory to delete.",
+        },
+    },
+
     "delete_file": {
         "path": {
             "type": "string",

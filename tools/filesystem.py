@@ -95,3 +95,19 @@ def copy_file(source: str, destination: str) -> str:
     shutil.copy2(source_path, destination_path)
 
     return str(destination_path)
+
+
+def delete_directory(path: str) -> str:
+    """Delete a directory and its contents."""
+    import shutil
+
+    target = Path(path).resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"Tidak ditemukan: {target}")
+
+    if not target.is_dir():
+        raise NotADirectoryError(f"Bukan direktori: {target}")
+
+    shutil.rmtree(target)
+    return str(target)

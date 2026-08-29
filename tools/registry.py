@@ -4,6 +4,8 @@ from tools.filesystem import (
     read_file,
     create_directory,
     delete_file,
+    delete_directory,
+    delete_directory,
     move_file,
     copy_file,
     write_file,
@@ -139,6 +141,36 @@ TOOLS = {
                 "path": {
                     "type": "string",
                     "description": "Path of the file to delete.",
+                },
+            },
+            "required": ["path"],
+        },
+    },
+    "delete_directory": {
+        "description": "Delete a directory and its contents.",
+        "risk": "modify",
+        "function": delete_directory,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the directory to delete.",
+                },
+            },
+            "required": ["path"],
+        },
+    },
+    "delete_directory": {
+        "description": "Delete a directory and its contents.",
+        "risk": "modify",
+        "function": delete_directory,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the directory to delete.",
                 },
             },
             "required": ["path"],
