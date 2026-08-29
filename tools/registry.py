@@ -8,6 +8,7 @@ from tools.filesystem import (
     delete_directory,
     move_file,
     copy_file,
+    get_file_info,
     write_file,
 )
 
@@ -171,6 +172,21 @@ TOOLS = {
                 "path": {
                     "type": "string",
                     "description": "Path of the directory to delete.",
+                },
+            },
+            "required": ["path"],
+        },
+    },
+    "get_file_info": {
+        "description": "Get basic metadata about a file or directory.",
+        "risk": "read-only",
+        "function": get_file_info,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path of the file or directory.",
                 },
             },
             "required": ["path"],

@@ -64,6 +64,13 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "get_file_info": {
+        "path": {
+            "type": "string",
+            "description": "Path of the file or directory.",
+        },
+    },
+
     "list_directory": {
         "path": {
             "type": "string",

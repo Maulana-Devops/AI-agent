@@ -159,3 +159,61 @@ def test_registry_delete_directory_tool():
 
     assert tool is not None
     assert tool["risk"] == "modify"
+
+
+def test_get_file_info_file(tmp_path):
+    target = tmp_path / "example.txt"
+    target.write_text("hello")
+
+    tool = get_tool("get_file_info")
+
+    assert tool is not None
+    assert tool["risk"] == "read-only"
+
+    result = tool["function"](str(target))
+
+    assert result["name"] == "example.txt"
+    assert result["type"] == "file"
+    assert result["size"] == 5
+    assert result["extension"] == ".txt"
+
+
+def test_get_file_info_directory(tmp_path):
+    target = tmp_path / "example-dir"
+    target.mkdir()
+
+    tool = get_tool("get_file_info")
+    result = tool["function"](str(target))
+
+    assert result["name"] == "example-dir"
+    assert result["type"] == "directory"
+    assert result["extension"] == ""
+
+
+def test_get_file_info_file(tmp_path):
+    target = tmp_path / "example.txt"
+    target.write_text("hello")
+
+    tool = get_tool("get_file_info")
+
+    assert tool is not None
+    assert tool["risk"] == "read-only"
+
+    result = tool["function"](str(target))
+
+    assert result["name"] == "example.txt"
+    assert result["type"] == "file"
+    assert result["size"] == 5
+    assert result["extension"] == ".txt"
+
+
+def test_get_file_info_directory(tmp_path):
+    target = tmp_path / "example-dir"
+    target.mkdir()
+
+    tool = get_tool("get_file_info")
+    result = tool["function"](str(target))
+
+    assert result["name"] == "example-dir"
+    assert result["type"] == "directory"
+    assert result["extension"] == ""

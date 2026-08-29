@@ -111,3 +111,19 @@ def delete_directory(path: str) -> str:
 
     shutil.rmtree(target)
     return str(target)
+
+
+def get_file_info(path: str) -> dict:
+    """Get basic metadata about a file or directory."""
+    target = Path(path).resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"Tidak ditemukan: {target}")
+
+    return {
+        "path": str(target),
+        "name": target.name,
+        "type": "directory" if target.is_dir() else "file",
+        "size": target.stat().st_size,
+        "extension": target.suffix if target.is_file() else "",
+    }
