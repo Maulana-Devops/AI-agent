@@ -1,52 +1,47 @@
 from pathlib import Path
+import os
 
 
 class Workspace:
     """
-    Menentukan workspace aktif tempat Laptop AI bekerja.
+    Menentukan root workspace berdasarkan current working directory
+    saat object Workspace dibuat.
     """
 
-    def __init__(self, root: str | None = None):
-        if root:
-            self.root = Path(root).expanduser().resolve()
-        else:
-            self.root = Path.cwd().resolve()
+    def __init__(self, root: str | os.PathLike | None = None):
+        if root is None:
+            root = os.getcwd()
 
-        if not self.root.exists():
-            raise FileNotFoundError(
-                f"Workspace tidak ditemukan: {self.root}"
-            )
-
-        if not self.root.is_dir():
-            raise NotADirectoryError(
-                f"Workspace bukan directory: {self.root}"
-            )
+        self.root = Path(root).expanduser().resolve()
 
     def path(self) -> str:
+        """Return absolute workspace root sebagai string."""
         return str(self.root)
+
+    def resolve(self, path: str = ".") -> Path:
+        """
+        Resolve path secara absolut.
+        Relative path dianggap relatif terhadap workspace root.
+        """
+        candidate = Path(path).expanduser()
+
+        if not candidate.is_absolute():
+            candidate = self.root / candidate
+
+        return candidate.resolve()
 
     def contains(self, path: str) -> bool:
         """
-        Memastikan path berada di dalam workspace.
+        True jika path berada di dalam workspace.
+        Workspace root sendiri juga dianggap valid.
         """
-        target = Path(path).expanduser().resolve()
+        target = Path(path).resolve()
 
         try:
             target.relative_to(self.root)
             return True
         except ValueError:
             return False
-
-    def resolve(self, path: str = ".") -> Path:
-        """
-        Resolve path relatif terhadap workspace.
-        """
-        target = Path(path).expanduser()
-
-        if not target.is_absolute():
-            target = self.root / target
-
-        return target.resolve()
 
     def require_inside(self, path: str = ".") -> Path:
         """

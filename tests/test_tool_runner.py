@@ -3,6 +3,20 @@ import pytest
 from app.tool_runner import ToolExecutionError, run_tool
 
 
+@pytest.fixture
+def filesystem_workspace(tmp_path):
+    from app.workspace import Workspace
+    from tools.filesystem import set_workspace
+
+    ws = Workspace(tmp_path)
+    set_workspace(ws)
+
+    yield tmp_path
+
+    set_workspace(None)
+
+
+
 def test_run_registered_tool():
     result = run_tool("get_current_directory")
 
@@ -33,10 +47,10 @@ def test_modify_tool_requires_confirmation():
         )
 
 
-def test_modify_tool_can_execute_with_confirmation(tmp_path):
+def test_modify_tool_can_execute_with_confirmation(filesystem_workspace):
     from app.tool_runner import run_tool
 
-    target = tmp_path / "confirmed-dir"
+    target = filesystem_workspace / "confirmed-dir"
 
     result = run_tool(
         "create_directory",
@@ -76,15 +90,15 @@ def test_read_only_tool_returns_structured_success_result():
     assert result.result
 
 
-def test_modify_tool_approval_is_per_action(tmp_path):
+def test_modify_tool_approval_is_per_action(filesystem_workspace):
     """
     Approval untuk satu tool tidak boleh otomatis memberikan
     approval kepada tool modify berikutnya.
     """
     from app.tool_runner import run_tool_result
 
-    first = tmp_path / "first"
-    second = tmp_path / "second"
+    first = filesystem_workspace / "first"
+    second = filesystem_workspace / "second"
 
     # Tanpa approval -> keduanya harus ditahan.
     result1 = run_tool_result(

@@ -1,3 +1,4 @@
+import pytest
 import subprocess
 import os
 from pathlib import Path
@@ -8,6 +9,20 @@ from tools.filesystem import (
     list_directory,
     read_file,
 )
+
+
+@pytest.fixture
+def filesystem_workspace(tmp_path):
+    from app.workspace import Workspace
+    from tools.filesystem import set_workspace
+
+    ws = Workspace(tmp_path)
+    set_workspace(ws)
+
+    yield tmp_path
+
+    set_workspace(None)
+
 from tools.git import (
     git_status,
     git_branch,
@@ -161,8 +176,8 @@ def test_registry_delete_directory_tool():
     assert tool["risk"] == "modify"
 
 
-def test_get_file_info_file(tmp_path):
-    target = tmp_path / "example.txt"
+def test_get_file_info_file(filesystem_workspace):
+    target = filesystem_workspace / "example.txt"
     target.write_text("hello")
 
     tool = get_tool("get_file_info")
@@ -178,8 +193,8 @@ def test_get_file_info_file(tmp_path):
     assert result["extension"] == ".txt"
 
 
-def test_get_file_info_directory(tmp_path):
-    target = tmp_path / "example-dir"
+def test_get_file_info_directory(filesystem_workspace):
+    target = filesystem_workspace / "example-dir"
     target.mkdir()
 
     tool = get_tool("get_file_info")
@@ -190,8 +205,8 @@ def test_get_file_info_directory(tmp_path):
     assert result["extension"] == ""
 
 
-def test_get_file_info_file(tmp_path):
-    target = tmp_path / "example.txt"
+def test_get_file_info_file(filesystem_workspace):
+    target = filesystem_workspace / "example.txt"
     target.write_text("hello")
 
     tool = get_tool("get_file_info")
@@ -207,8 +222,8 @@ def test_get_file_info_file(tmp_path):
     assert result["extension"] == ".txt"
 
 
-def test_get_file_info_directory(tmp_path):
-    target = tmp_path / "example-dir"
+def test_get_file_info_directory(filesystem_workspace):
+    target = filesystem_workspace / "example-dir"
     target.mkdir()
 
     tool = get_tool("get_file_info")
@@ -219,36 +234,36 @@ def test_get_file_info_directory(tmp_path):
     assert result["extension"] == ""
 
 
-def test_list_directory_recursive(tmp_path):
-    (tmp_path / "root.txt").write_text("root")
-    sub = tmp_path / "sub"
+def test_list_directory_recursive(filesystem_workspace):
+    (filesystem_workspace / "root.txt").write_text("root")
+    sub = filesystem_workspace / "sub"
     sub.mkdir()
     (sub / "nested.txt").write_text("nested")
 
     tool = get_tool("list_directory")
-    result = tool["function"](str(tmp_path), recursive=True)
+    result = tool["function"](str(filesystem_workspace), recursive=True)
 
     assert "root.txt" in result
     assert "sub" in result
     assert "sub/nested.txt" in result
 
 
-def test_list_directory_extension_filter(tmp_path):
-    (tmp_path / "one.txt").write_text("1")
-    (tmp_path / "two.py").write_text("2")
-    (tmp_path / "three.txt").write_text("3")
+def test_list_directory_extension_filter(filesystem_workspace):
+    (filesystem_workspace / "one.txt").write_text("1")
+    (filesystem_workspace / "two.py").write_text("2")
+    (filesystem_workspace / "three.txt").write_text("3")
 
     tool = get_tool("list_directory")
-    result = tool["function"](str(tmp_path), extension=".txt")
+    result = tool["function"](str(filesystem_workspace), extension=".txt")
 
     assert result == ["one.txt", "three.txt"]
 
 
-def test_search_files_by_pattern(tmp_path):
-    (tmp_path / "main.py").write_text("print('hello')")
-    (tmp_path / "notes.txt").write_text("notes")
+def test_search_files_by_pattern(filesystem_workspace):
+    (filesystem_workspace / "main.py").write_text("print('hello')")
+    (filesystem_workspace / "notes.txt").write_text("notes")
 
-    sub = tmp_path / "src"
+    sub = filesystem_workspace / "src"
     sub.mkdir()
     (sub / "app.py").write_text("app")
 
@@ -257,16 +272,16 @@ def test_search_files_by_pattern(tmp_path):
     assert tool is not None
     assert tool["risk"] == "read-only"
 
-    result = tool["function"](str(tmp_path), "*.py")
+    result = tool["function"](str(filesystem_workspace), "*.py")
 
     assert result == ["main.py", "src/app.py"]
 
 
-def test_search_file_contents(tmp_path):
-    (tmp_path / "one.txt").write_text("hello world\npython is great")
-    (tmp_path / "two.txt").write_text("hello again")
+def test_search_file_contents(filesystem_workspace):
+    (filesystem_workspace / "one.txt").write_text("hello world\npython is great")
+    (filesystem_workspace / "two.txt").write_text("hello again")
 
-    sub = tmp_path / "src"
+    sub = filesystem_workspace / "src"
     sub.mkdir()
     (sub / "app.py").write_text("hello from python")
 
@@ -275,7 +290,7 @@ def test_search_file_contents(tmp_path):
     assert tool is not None
     assert tool["risk"] == "read-only"
 
-    result = tool["function"](str(tmp_path), "hello")
+    result = tool["function"](str(filesystem_workspace), "hello")
 
     assert len(result) == 3
     assert result[0]["path"] == "one.txt"
@@ -313,12 +328,12 @@ def test_tool_runner_modify_requires_confirmation(tmp_path):
     assert not target.exists()
 
 
-def test_tool_runner_modify_with_confirmation(tmp_path):
+def test_tool_runner_modify_with_confirmation(filesystem_workspace):
     from app.tool_runner import ToolRunner
 
     runner = ToolRunner()
 
-    target = tmp_path / "new-dir"
+    target = filesystem_workspace / "new-dir"
 
     result = runner.run(
         "create_directory",

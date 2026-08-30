@@ -1,4 +1,19 @@
+import pytest
 from app.agent import LaptopAgent
+
+
+@pytest.fixture
+def filesystem_workspace(tmp_path):
+    from app.workspace import Workspace
+    from tools.filesystem import set_workspace
+
+    ws = Workspace(tmp_path)
+    set_workspace(ws)
+
+    yield tmp_path
+
+    set_workspace(None)
+
 
 
 def test_agent_model():
@@ -77,7 +92,7 @@ def test_agent_tool_loop_has_safety_limit():
     assert callable(agent.ask)
 
 
-def test_agent_modify_actions_require_individual_approval(monkeypatch, tmp_path):
+def test_agent_modify_actions_require_individual_approval(monkeypatch, filesystem_workspace):
     """
     Setiap modify tool call harus meminta approval sendiri.
     Approval untuk action pertama tidak boleh bocor ke action kedua.
@@ -85,8 +100,8 @@ def test_agent_modify_actions_require_individual_approval(monkeypatch, tmp_path)
 
     agent = LaptopAgent("test-key")
 
-    first = tmp_path / "first"
-    second = tmp_path / "second"
+    first = filesystem_workspace / "first"
+    second = filesystem_workspace / "second"
 
     class FakeFunctionCall:
         def __init__(self, name, args):
