@@ -99,12 +99,20 @@ class LaptopAgent:
             },
         )
 
-    def ask(self, message: str) -> str:
+    def ask(
+        self,
+        message: str,
+        *,
+        confirmed: bool = False,
+    ) -> str:
         """
         Memproses pesan pengguna.
 
         Gemini dapat melakukan beberapa putaran tool calling
         sebelum menghasilkan jawaban akhir.
+
+        Tool read-only dapat dijalankan langsung.
+        Tool modify hanya dijalankan jika confirmed=True.
         """
 
         if not message or not message.strip():
@@ -198,6 +206,7 @@ class LaptopAgent:
                     result = run_tool(
                         name,
                         args,
+                        confirmed=confirmed,
                     )
 
                     print(f"[RESULT] {result}")

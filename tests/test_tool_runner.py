@@ -21,3 +21,28 @@ def test_tool_arguments_are_supported():
     # Yang penting error yang muncul adalah error Git,
     # bukan error karena tool runner gagal memanggil fungsi.
     assert isinstance(result, str) or result is not None
+
+
+def test_modify_tool_requires_confirmation():
+    from app.tool_runner import ToolExecutionError, run_tool
+
+    with pytest.raises(ToolExecutionError):
+        run_tool(
+            "create_directory",
+            {"path": "/tmp/laptop-ai-test-confirmation"},
+        )
+
+
+def test_modify_tool_can_execute_with_confirmation(tmp_path):
+    from app.tool_runner import run_tool
+
+    target = tmp_path / "confirmed-dir"
+
+    result = run_tool(
+        "create_directory",
+        {"path": str(target)},
+        confirmed=True,
+    )
+
+    assert result == str(target.resolve())
+    assert target.exists()
