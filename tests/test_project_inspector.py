@@ -70,3 +70,75 @@ def test_inspector_ignores_git_and_cache(tmp_path):
     assert "main.py" in info.files
     assert ".git/config" not in info.files
     assert "__pycache__/test.pyc" not in info.files
+
+
+def test_inspect_project_is_registered_as_read_only():
+    from tools.registry import get_tool
+
+    tool = get_tool("inspect_project")
+
+    assert tool is not None
+    assert tool["risk"] == "read-only"
+    assert callable(tool["function"])
+
+
+def test_inspect_project_returns_project_info():
+    from tools.registry import get_tool
+
+    tool = get_tool("inspect_project")
+
+    result = tool["function"]()
+
+    assert result.name == "laptop-ai"
+    assert result.root
+    assert isinstance(result.technologies, list)
+    assert isinstance(result.files, list)
+    assert isinstance(result.indicators, dict)
+
+
+def test_inspect_project_has_gemini_declaration():
+    from app.tool_adapter import get_tool_declarations
+
+    declarations = get_tool_declarations()
+
+    inspect = next(
+        item
+        for item in declarations
+        if item["name"] == "inspect_project"
+    )
+
+    assert inspect["description"]
+    assert inspect["parameters"]["type"] == "object"
+    assert inspect["parameters"]["properties"] == {}
+
+
+def test_inspect_project_runs_without_confirmation():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result("inspect_project")
+
+    assert result.success is True
+    assert result.executed is True
+    assert result.requires_confirmation is False
+
+    project = result.result
+
+    assert project.name == "laptop-ai"
+    assert project.root
+    assert isinstance(project.technologies, list)
+
+
+def test_inspect_project_has_gemini_declaration():
+    from app.tool_adapter import get_tool_declarations
+
+    declarations = get_tool_declarations()
+
+    inspect = next(
+        item
+        for item in declarations
+        if item["name"] == "inspect_project"
+    )
+
+    assert inspect["description"]
+    assert inspect["parameters"]["type"] == "object"
+    assert inspect["parameters"]["properties"] == {}

@@ -3,6 +3,8 @@ from tools.registry import list_tools
 
 TOOL_PARAMETERS = {
     "get_current_directory": {},
+
+    "inspect_project": {},
     "create_directory": {
         "path": {
             "type": "string",

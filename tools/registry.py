@@ -13,6 +13,18 @@ from tools.filesystem import (
     write_file,
 )
 
+from app.project_inspector import ProjectInspector
+
+
+project_inspector = ProjectInspector()
+
+
+from app.project_inspector import ProjectInspector
+
+
+project_inspector = ProjectInspector()
+
+
 from tools.git import (
     git_status,
     git_branch,
@@ -27,6 +39,30 @@ TOOLS = {
         "description": "Get the current working directory.",
         "risk": "read-only",
         "function": get_current_directory,
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    "inspect_project": {
+        "description": (
+            "Inspect the current workspace and detect project "
+            "technologies, project files, and development indicators."
+        ),
+        "risk": "read-only",
+        "function": project_inspector.inspect,
+        "parameters": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    "inspect_project": {
+        "description": (
+            "Inspect the current workspace and detect project "
+            "technologies, project files, and development indicators."
+        ),
+        "risk": "read-only",
+        "function": project_inspector.inspect,
         "parameters": {
             "type": "object",
             "properties": {},
