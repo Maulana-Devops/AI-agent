@@ -1,36 +1,115 @@
+from dataclasses import dataclass
+from typing import Any
+
 from tools.registry import get_tool
 
 
-class ToolExecutionError(RuntimeError):
-    pass
+class ToolExecutionError(Exception):
+    """Raised when a tool cannot be executed safely."""
 
 
-def run_tool(name: str, arguments: dict | None = None):
+@dataclass
+class ToolExecutionResult:
+    tool_name: str
+    success: bool
+    executed: bool
+    result: Any = None
+    error: str = ""
+    requires_confirmation: bool = False
+
+
+class ToolRunner:
+    """Safely execute registered tools according to their risk level."""
+
+    def run(
+        self,
+        tool_name: str,
+        arguments: dict[str, Any] | None = None,
+        *,
+        confirmed: bool = False,
+    ) -> ToolExecutionResult:
+        arguments = arguments or {}
+
+        tool = get_tool(tool_name)
+
+        if tool is None:
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=False,
+                executed=False,
+                error=f"Tool tidak ditemukan: {tool_name}",
+            )
+
+        risk = tool.get("risk")
+        function = tool.get("function")
+
+        if function is None:
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=False,
+                executed=False,
+                error=f"Tool tidak memiliki function: {tool_name}",
+            )
+
+        if risk == "dangerous":
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=False,
+                executed=False,
+                error="Tool dangerous diblokir oleh policy.",
+            )
+
+        if risk == "modify" and not confirmed:
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=False,
+                executed=False,
+                requires_confirmation=True,
+                error="Konfirmasi diperlukan sebelum menjalankan tool modify.",
+            )
+
+        try:
+            result = function(**arguments)
+
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=True,
+                executed=True,
+                result=result,
+            )
+
+        except Exception as exc:
+            return ToolExecutionResult(
+                tool_name=tool_name,
+                success=False,
+                executed=False,
+                error=str(exc),
+            )
+
+
+tool_runner = ToolRunner()
+
+
+def run_tool(
+    name: str,
+    arguments: dict[str, Any] | None = None,
+    *,
+    confirmed: bool = False,
+):
     """
-    Execute a registered tool.
+    Compatibility API used by the existing agent.
 
-    The tool runner only resolves and executes registered Python
-    functions. It does not provide arbitrary shell execution.
+    Read-only tools execute normally.
+    Modify tools require confirmed=True.
     """
-    tool = get_tool(name)
 
-    if tool is None:
-        raise ToolExecutionError(
-            f"Tool tidak ditemukan: {name}"
-        )
+    result = tool_runner.run(
+        name,
+        arguments,
+        confirmed=confirmed,
+    )
 
-    function = tool["function"]
-    arguments = arguments or {}
+    if not result.success:
+        raise ToolExecutionError(result.error)
 
-    try:
-        return function(**arguments)
-
-    except TypeError as exc:
-        raise ToolExecutionError(
-            f"Argumen tool tidak valid untuk {name}: {exc}"
-        ) from exc
-
-    except Exception as exc:
-        raise ToolExecutionError(
-            f"Tool {name} gagal dijalankan: {exc}"
-        ) from exc
+    return result.result

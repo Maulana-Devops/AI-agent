@@ -280,3 +280,63 @@ def test_search_file_contents(tmp_path):
     assert len(result) == 3
     assert result[0]["path"] == "one.txt"
     assert result[0]["line"] == 1
+
+
+def test_tool_runner_read_only_executes():
+    from app.tool_runner import ToolRunner
+
+    runner = ToolRunner()
+
+    result = runner.run("get_current_directory")
+
+    assert result.success is True
+    assert result.executed is True
+    assert result.requires_confirmation is False
+    assert isinstance(result.result, str)
+
+
+def test_tool_runner_modify_requires_confirmation(tmp_path):
+    from app.tool_runner import ToolRunner
+
+    runner = ToolRunner()
+
+    target = tmp_path / "new-dir"
+
+    result = runner.run(
+        "create_directory",
+        {"path": str(target)},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert result.requires_confirmation is True
+    assert not target.exists()
+
+
+def test_tool_runner_modify_with_confirmation(tmp_path):
+    from app.tool_runner import ToolRunner
+
+    runner = ToolRunner()
+
+    target = tmp_path / "new-dir"
+
+    result = runner.run(
+        "create_directory",
+        {"path": str(target)},
+        confirmed=True,
+    )
+
+    assert result.success is True
+    assert result.executed is True
+    assert target.exists()
+
+
+def test_tool_runner_unknown_tool():
+    from app.tool_runner import ToolRunner
+
+    runner = ToolRunner()
+
+    result = runner.run("does_not_exist")
+
+    assert result.success is False
+    assert result.executed is False
