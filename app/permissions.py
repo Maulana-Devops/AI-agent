@@ -1,4 +1,5 @@
 from enum import Enum
+import shlex
 
 
 class RiskLevel(str, Enum):
@@ -7,7 +8,7 @@ class RiskLevel(str, Enum):
     DANGEROUS = "dangerous"
 
 
-# Command yang aman untuk dibaca tanpa konfirmasi.
+# Exact commands yang aman dibaca tanpa konfirmasi.
 READ_ONLY_COMMANDS = {
     "pwd",
     "ls",
@@ -24,46 +25,61 @@ READ_ONLY_COMMANDS = {
 }
 
 
-# Command yang mengubah sesuatu dan harus meminta konfirmasi.
-MODIFY_COMMAND_PREFIXES = (
-    "mkdir ",
-    "touch ",
-    "cp ",
-    "mv ",
-    "git add ",
-    "git commit ",
+# Command dasar yang mengubah filesystem / repository.
+MODIFY_COMMANDS = {
+    "mkdir",
+    "touch",
+    "cp",
+    "mv",
+    "git add",
+    "git commit",
     "git push",
     "git pull",
-    "python ",
-)
+    "python",
+}
 
 
-# Command yang kita blok secara default.
-DANGEROUS_PREFIXES = (
-    "rm ",
-    "rm -",
-    "sudo ",
-    "su ",
+# Command yang selalu diblokir.
+DANGEROUS_COMMANDS = {
+    "rm",
+    "sudo",
+    "su",
     "mkfs",
     "fdisk",
-    "parted ",
-    "dd ",
+    "parted",
+    "dd",
     "shutdown",
     "reboot",
     "poweroff",
-    "chmod 777",
-    "chown ",
-)
+}
+
+
+def _normalize_command(command: str) -> str:
+    """Normalize whitespace without changing command semantics."""
+    return " ".join(command.strip().split())
+
+
+def _command_name(command: str) -> str:
+    """Return the first shell token."""
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return ""
+
+    return tokens[0] if tokens else ""
 
 
 def classify_command(command: str) -> RiskLevel:
     """
     Classify a shell command into a risk level.
 
-    This is intentionally conservative.
-    Unknown commands are treated as MODIFY.
+    Policy:
+    - known read-only commands -> READ_ONLY
+    - dangerous command names -> DANGEROUS
+    - known modifying command names -> MODIFY
+    - unknown commands -> MODIFY
     """
-    command = command.strip()
+    command = _normalize_command(command)
 
     if not command:
         return RiskLevel.DANGEROUS
@@ -71,15 +87,14 @@ def classify_command(command: str) -> RiskLevel:
     if command in READ_ONLY_COMMANDS:
         return RiskLevel.READ_ONLY
 
-    for prefix in DANGEROUS_PREFIXES:
-        if command.startswith(prefix):
-            return RiskLevel.DANGEROUS
+    name = _command_name(command)
 
-    for prefix in MODIFY_COMMAND_PREFIXES:
-        if command.startswith(prefix):
-            return RiskLevel.MODIFY
+    if name in DANGEROUS_COMMANDS:
+        return RiskLevel.DANGEROUS
 
-    # Unknown commands are not automatically trusted.
+    if name in MODIFY_COMMANDS:
+        return RiskLevel.MODIFY
+
     return RiskLevel.MODIFY
 
 
