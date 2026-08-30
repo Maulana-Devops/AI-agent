@@ -90,6 +90,25 @@ class ToolRunner:
 tool_runner = ToolRunner()
 
 
+def run_tool_result(
+    name: str,
+    arguments: dict[str, Any] | None = None,
+    *,
+    confirmed: bool = False,
+) -> ToolExecutionResult:
+    """
+    Structured tool execution API.
+
+    Agent dapat memeriksa status execution tanpa melakukan
+    parsing terhadap pesan error.
+    """
+    return tool_runner.run(
+        name,
+        arguments,
+        confirmed=confirmed,
+    )
+
+
 def run_tool(
     name: str,
     arguments: dict[str, Any] | None = None,
@@ -97,13 +116,12 @@ def run_tool(
     confirmed: bool = False,
 ):
     """
-    Compatibility API used by the existing agent.
+    Compatibility API used by existing callers.
 
     Read-only tools execute normally.
     Modify tools require confirmed=True.
     """
-
-    result = tool_runner.run(
+    result = run_tool_result(
         name,
         arguments,
         confirmed=confirmed,

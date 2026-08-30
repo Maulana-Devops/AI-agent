@@ -46,3 +46,31 @@ def test_modify_tool_can_execute_with_confirmation(tmp_path):
 
     assert result == str(target.resolve())
     assert target.exists()
+
+
+def test_modify_tool_returns_structured_confirmation_result(tmp_path):
+    from app.tool_runner import run_tool_result
+
+    target = tmp_path / "structured-confirmation"
+
+    result = run_tool_result(
+        "create_directory",
+        {"path": str(target)},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert result.requires_confirmation is True
+    assert result.error
+    assert not target.exists()
+
+
+def test_read_only_tool_returns_structured_success_result():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result("get_current_directory")
+
+    assert result.success is True
+    assert result.executed is True
+    assert result.requires_confirmation is False
+    assert result.result

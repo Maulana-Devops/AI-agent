@@ -7,7 +7,7 @@ from google import genai
 from google.genai import types
 
 from app.tool_adapter import get_tool_declarations
-from app.tool_runner import run_tool
+from app.tool_runner import run_tool_result
 
 
 class LaptopAgent:
@@ -203,29 +203,44 @@ class LaptopAgent:
                 # Jalankan tool
                 # -------------------------------------------------
 
-                try:
-                    result = run_tool(
-                        name,
-                        args,
-                        confirmed=confirmed,
-                    )
+                # -------------------------------------------------
+                # Jalankan tool melalui structured ToolRunner result
+                # -------------------------------------------------
 
-                    print(f"[RESULT] {result}")
+                execution = run_tool_result(
+                    name,
+                    args,
+                    confirmed=confirmed,
+                )
+
+                if execution.success:
+                    print(f"[RESULT] {execution.result}")
 
                     tool_result = {
                         "success": True,
-                        "result": result,
+                        "result": execution.result,
                     }
 
-                except Exception as exc:
-                    error_message = str(exc)
+                elif execution.requires_confirmation:
+                    # ---------------------------------------------
+                    # Tool modify membutuhkan approval.
+                    # Jangan parsing error message.
+                    # ---------------------------------------------
 
-                    confirmation_required = (
-                        "Konfirmasi diperlukan sebelum menjalankan tool modify."
-                        in error_message
-                    )
+                    if confirm_tool is None:
+                        error_message = execution.error
 
-                    if confirmation_required and confirm_tool is not None:
+                        print(
+                            f"[TOOL ERROR] {error_message}"
+                        )
+
+                        tool_result = {
+                            "success": False,
+                            "error": error_message,
+                            "requires_confirmation": True,
+                        }
+
+                    else:
                         try:
                             approved = bool(
                                 confirm_tool(name, args)
@@ -237,23 +252,32 @@ class LaptopAgent:
                                 f"{confirm_exc}"
                             )
 
-                        if approved:
-                            try:
-                                result = run_tool(
-                                    name,
-                                    args,
-                                    confirmed=True,
-                                )
+                            print(
+                                f"[TOOL ERROR] {error_message}"
+                            )
 
-                                print(f"[RESULT] {result}")
+                        if approved:
+                            confirmed_execution = run_tool_result(
+                                name,
+                                args,
+                                confirmed=True,
+                            )
+
+                            if confirmed_execution.success:
+                                print(
+                                    "[RESULT] "
+                                    f"{confirmed_execution.result}"
+                                )
 
                                 tool_result = {
                                     "success": True,
-                                    "result": result,
+                                    "result": confirmed_execution.result,
                                 }
 
-                            except Exception as execute_exc:
-                                error_message = str(execute_exc)
+                            else:
+                                error_message = (
+                                    confirmed_execution.error
+                                )
 
                                 print(
                                     f"[TOOL ERROR] {error_message}"
@@ -270,7 +294,8 @@ class LaptopAgent:
                             )
 
                             print(
-                                "[TOOL] Modify dibatalkan oleh pengguna."
+                                "[TOOL] "
+                                "Modify dibatalkan oleh pengguna."
                             )
 
                             tool_result = {
@@ -278,15 +303,17 @@ class LaptopAgent:
                                 "error": error_message,
                             }
 
-                    else:
-                        print(
-                            f"[TOOL ERROR] {error_message}"
-                        )
+                else:
+                    error_message = execution.error
 
-                        tool_result = {
-                            "success": False,
-                            "error": error_message,
-                        }
+                    print(
+                        f"[TOOL ERROR] {error_message}"
+                    )
+
+                    tool_result = {
+                        "success": False,
+                        "error": error_message,
+                    }
 
                 # -------------------------------------------------
                 # Buat function response
