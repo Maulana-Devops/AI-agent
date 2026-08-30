@@ -74,3 +74,53 @@ def test_read_only_tool_returns_structured_success_result():
     assert result.executed is True
     assert result.requires_confirmation is False
     assert result.result
+
+
+def test_modify_tool_approval_is_per_action(tmp_path):
+    """
+    Approval untuk satu tool tidak boleh otomatis memberikan
+    approval kepada tool modify berikutnya.
+    """
+    from app.tool_runner import run_tool_result
+
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+
+    # Tanpa approval -> keduanya harus ditahan.
+    result1 = run_tool_result(
+        "create_directory",
+        {"path": str(first)},
+    )
+
+    result2 = run_tool_result(
+        "create_directory",
+        {"path": str(second)},
+    )
+
+    assert result1.requires_confirmation is True
+    assert result2.requires_confirmation is True
+
+    assert not first.exists()
+    assert not second.exists()
+
+    # Approval hanya diberikan pada action pertama.
+    approved = run_tool_result(
+        "create_directory",
+        {"path": str(first)},
+        confirmed=True,
+    )
+
+    assert approved.success is True
+    assert approved.executed is True
+    assert first.exists()
+
+    # Action kedua tetap membutuhkan approval baru.
+    still_blocked = run_tool_result(
+        "create_directory",
+        {"path": str(second)},
+    )
+
+    assert still_blocked.success is False
+    assert still_blocked.executed is False
+    assert still_blocked.requires_confirmation is True
+    assert not second.exists()
