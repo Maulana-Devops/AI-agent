@@ -162,3 +162,38 @@ def search_files(path: str = ".", pattern: str = "*") -> list[str]:
         for item in target.rglob(pattern)
         if item.is_file()
     )
+
+
+def search_file_contents(path: str = ".", query: str = "") -> list[dict]:
+    """Search text inside files recursively."""
+    target = Path(path).resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"Path tidak ditemukan: {target}")
+
+    if not target.is_dir():
+        raise NotADirectoryError(f"Bukan directory: {target}")
+
+    if not query:
+        raise ValueError("Query tidak boleh kosong")
+
+    results = []
+
+    for item in target.rglob("*"):
+        if not item.is_file():
+            continue
+
+        try:
+            lines = item.read_text(encoding="utf-8").splitlines()
+        except (UnicodeDecodeError, PermissionError):
+            continue
+
+        for number, line in enumerate(lines, 1):
+            if query in line:
+                results.append({
+                    "path": str(item.relative_to(target)),
+                    "line": number,
+                    "content": line,
+                })
+
+    return results

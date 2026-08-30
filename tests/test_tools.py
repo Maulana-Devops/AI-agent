@@ -260,3 +260,23 @@ def test_search_files_by_pattern(tmp_path):
     result = tool["function"](str(tmp_path), "*.py")
 
     assert result == ["main.py", "src/app.py"]
+
+
+def test_search_file_contents(tmp_path):
+    (tmp_path / "one.txt").write_text("hello world\npython is great")
+    (tmp_path / "two.txt").write_text("hello again")
+
+    sub = tmp_path / "src"
+    sub.mkdir()
+    (sub / "app.py").write_text("hello from python")
+
+    tool = get_tool("search_file_contents")
+
+    assert tool is not None
+    assert tool["risk"] == "read-only"
+
+    result = tool["function"](str(tmp_path), "hello")
+
+    assert len(result) == 3
+    assert result[0]["path"] == "one.txt"
+    assert result[0]["line"] == 1

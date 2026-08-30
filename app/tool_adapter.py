@@ -82,6 +82,17 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "search_file_contents": {
+        "path": {
+            "type": "string",
+            "description": "Directory to search.",
+        },
+        "query": {
+            "type": "string",
+            "description": "Text to search for.",
+        },
+    },
+
     "list_directory": {
         "path": {
             "type": "string",

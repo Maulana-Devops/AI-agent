@@ -10,6 +10,7 @@ from tools.filesystem import (
     copy_file,
     get_file_info,
     search_files,
+    search_file_contents,
     write_file,
 )
 
@@ -210,6 +211,25 @@ TOOLS = {
                 },
             },
             "required": ["path", "pattern"],
+        },
+    },
+    "search_file_contents": {
+        "description": "Search text inside files recursively.",
+        "risk": "read-only",
+        "function": search_file_contents,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Directory to search.",
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Text to search for.",
+                },
+            },
+            "required": ["path", "query"],
         },
     },
     "git_status": {
