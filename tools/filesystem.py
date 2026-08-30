@@ -1,5 +1,38 @@
 from pathlib import Path
 
+from app.workspace import Workspace
+
+
+_workspace = None
+
+
+def set_workspace(workspace):
+    """
+    Set workspace aktif untuk membatasi operasi filesystem.
+
+    Jika workspace None, filesystem berjalan tanpa boundary eksplisit
+    untuk menjaga kompatibilitas dengan pemanggil lama dan test.
+    """
+    global _workspace
+    _workspace = workspace
+
+
+def get_workspace():
+    """Return workspace aktif."""
+    return _workspace
+
+
+def _workspace_path(path: str = ".") -> Path:
+    """
+    Resolve path dan pastikan berada di dalam workspace.
+
+    Jika workspace eksplisit belum dipasang, current working directory
+    digunakan sebagai workspace default.
+    """
+    if _workspace is None:
+        return Workspace().require_inside(path)
+
+    return _workspace.require_inside(path)
 
 def get_current_directory() -> str:
     """Return the current working directory."""
@@ -12,7 +45,7 @@ def list_directory(
     extension: str | None = None,
 ) -> list[str]:
     """List files and directories with optional recursion and extension filtering."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Path tidak ditemukan: {target}")
@@ -30,16 +63,14 @@ def list_directory(
             if item.suffix != normalized:
                 continue
 
-        result.append(
-            str(item.relative_to(target))
-        )
+        result.append(str(item.relative_to(target)))
 
     return sorted(result)
 
 
 def read_file(path: str) -> str:
     """Read a text file without modifying it."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"File tidak ditemukan: {target}")
@@ -52,14 +83,14 @@ def read_file(path: str) -> str:
 
 def create_directory(path: str) -> str:
     """Create a new directory."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
     target.mkdir(parents=True, exist_ok=True)
     return str(target)
 
 
 def write_file(path: str, content: str) -> str:
     """Write text content to a file."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
     return str(target)
@@ -67,7 +98,7 @@ def write_file(path: str, content: str) -> str:
 
 def delete_file(path: str) -> str:
     """Delete a file."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Tidak ditemukan: {target}")
@@ -81,8 +112,8 @@ def delete_file(path: str) -> str:
 
 def move_file(source: str, destination: str) -> str:
     """Move or rename a file."""
-    source_path = Path(source).resolve()
-    destination_path = Path(destination).resolve()
+    source_path = _workspace_path(source)
+    destination_path = _workspace_path(destination)
 
     if not source_path.exists():
         raise FileNotFoundError(f"Tidak ditemukan: {source_path}")
@@ -100,8 +131,8 @@ def copy_file(source: str, destination: str) -> str:
     """Copy a file to a new destination."""
     import shutil
 
-    source_path = Path(source).resolve()
-    destination_path = Path(destination).resolve()
+    source_path = _workspace_path(source)
+    destination_path = _workspace_path(destination)
 
     if not source_path.exists():
         raise FileNotFoundError(f"Tidak ditemukan: {source_path}")
@@ -119,7 +150,7 @@ def delete_directory(path: str) -> str:
     """Delete a directory and its contents."""
     import shutil
 
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Tidak ditemukan: {target}")
@@ -133,7 +164,7 @@ def delete_directory(path: str) -> str:
 
 def get_file_info(path: str) -> dict:
     """Get basic metadata about a file or directory."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Tidak ditemukan: {target}")
@@ -149,7 +180,7 @@ def get_file_info(path: str) -> dict:
 
 def search_files(path: str = ".", pattern: str = "*") -> list[str]:
     """Search files recursively by filename pattern."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Path tidak ditemukan: {target}")
@@ -166,7 +197,7 @@ def search_files(path: str = ".", pattern: str = "*") -> list[str]:
 
 def search_file_contents(path: str = ".", query: str = "") -> list[dict]:
     """Search text inside files recursively."""
-    target = Path(path).resolve()
+    target = _workspace_path(path)
 
     if not target.exists():
         raise FileNotFoundError(f"Path tidak ditemukan: {target}")
