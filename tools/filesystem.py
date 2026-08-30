@@ -145,3 +145,20 @@ def get_file_info(path: str) -> dict:
         "size": target.stat().st_size,
         "extension": target.suffix if target.is_file() else "",
     }
+
+
+def search_files(path: str = ".", pattern: str = "*") -> list[str]:
+    """Search files recursively by filename pattern."""
+    target = Path(path).resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"Path tidak ditemukan: {target}")
+
+    if not target.is_dir():
+        raise NotADirectoryError(f"Bukan directory: {target}")
+
+    return sorted(
+        str(item.relative_to(target))
+        for item in target.rglob(pattern)
+        if item.is_file()
+    )

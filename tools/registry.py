@@ -9,6 +9,7 @@ from tools.filesystem import (
     move_file,
     copy_file,
     get_file_info,
+    search_files,
     write_file,
 )
 
@@ -190,6 +191,25 @@ TOOLS = {
                 },
             },
             "required": ["path"],
+        },
+    },
+    "search_files": {
+        "description": "Search files recursively by filename pattern.",
+        "risk": "read-only",
+        "function": search_files,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Directory to search.",
+                },
+                "pattern": {
+                    "type": "string",
+                    "description": "Filename pattern, such as *.py.",
+                },
+            },
+            "required": ["path", "pattern"],
         },
     },
     "git_status": {

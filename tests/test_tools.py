@@ -242,3 +242,21 @@ def test_list_directory_extension_filter(tmp_path):
     result = tool["function"](str(tmp_path), extension=".txt")
 
     assert result == ["one.txt", "three.txt"]
+
+
+def test_search_files_by_pattern(tmp_path):
+    (tmp_path / "main.py").write_text("print('hello')")
+    (tmp_path / "notes.txt").write_text("notes")
+
+    sub = tmp_path / "src"
+    sub.mkdir()
+    (sub / "app.py").write_text("app")
+
+    tool = get_tool("search_files")
+
+    assert tool is not None
+    assert tool["risk"] == "read-only"
+
+    result = tool["function"](str(tmp_path), "*.py")
+
+    assert result == ["main.py", "src/app.py"]

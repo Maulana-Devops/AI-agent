@@ -71,6 +71,17 @@ TOOL_PARAMETERS = {
         },
     },
 
+    "search_files": {
+        "path": {
+            "type": "string",
+            "description": "Directory to search.",
+        },
+        "pattern": {
+            "type": "string",
+            "description": "Filename pattern, such as *.py.",
+        },
+    },
+
     "list_directory": {
         "path": {
             "type": "string",
