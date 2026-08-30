@@ -152,7 +152,10 @@ def main():
             continue
 
         try:
-            response = agent.ask(message)
+            response = agent.ask(
+                message,
+                confirm_tool=confirm_tool_execution,
+            )
 
             print(f"\nAI: {response}\n")
 
@@ -178,3 +181,47 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def confirm_tool_execution(
+    tool_name: str,
+    arguments: dict,
+) -> bool:
+    """
+    Minta konfirmasi pengguna sebelum menjalankan tool modify.
+    """
+
+    print()
+    print("=" * 60)
+    print("[CONFIRMATION REQUIRED]")
+    print("=" * 60)
+    print(f"Tool : {tool_name}")
+    print("Risk : MODIFY")
+
+    print("\nArguments:")
+    if arguments:
+        for key, value in arguments.items():
+            print(f"  {key}: {value}")
+    else:
+        print("  (none)")
+
+    print()
+    print("Tool ini dapat mengubah file, data, atau sistem.")
+    print()
+
+    try:
+        answer = input("Lanjutkan? [y/N]: ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\nOperasi dibatalkan.")
+        return False
+
+    approved = answer in {"y", "yes"}
+
+    if approved:
+        print("[CONFIRMATION] Disetujui.")
+    else:
+        print("[CONFIRMATION] Ditolak.")
+
+    print()
+
+    return approved

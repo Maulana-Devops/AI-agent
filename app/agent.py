@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from typing import Any, Callable
 
 from dotenv import load_dotenv
 from google import genai
@@ -104,6 +105,7 @@ class LaptopAgent:
         message: str,
         *,
         confirmed: bool = False,
+        confirm_tool: Callable[[str, dict[str, Any]], bool] | None = None,
     ) -> str:
         """
         Memproses pesan pengguna.
@@ -202,7 +204,6 @@ class LaptopAgent:
                 # -------------------------------------------------
 
                 try:
-
                     result = run_tool(
                         name,
                         args,
@@ -217,17 +218,75 @@ class LaptopAgent:
                     }
 
                 except Exception as exc:
-
                     error_message = str(exc)
 
-                    print(
-                        f"[TOOL ERROR] {error_message}"
+                    confirmation_required = (
+                        "Konfirmasi diperlukan sebelum menjalankan tool modify."
+                        in error_message
                     )
 
-                    tool_result = {
-                        "success": False,
-                        "error": error_message,
-                    }
+                    if confirmation_required and confirm_tool is not None:
+                        try:
+                            approved = bool(
+                                confirm_tool(name, args)
+                            )
+                        except Exception as confirm_exc:
+                            approved = False
+                            error_message = (
+                                "Confirmation callback gagal: "
+                                f"{confirm_exc}"
+                            )
+
+                        if approved:
+                            try:
+                                result = run_tool(
+                                    name,
+                                    args,
+                                    confirmed=True,
+                                )
+
+                                print(f"[RESULT] {result}")
+
+                                tool_result = {
+                                    "success": True,
+                                    "result": result,
+                                }
+
+                            except Exception as execute_exc:
+                                error_message = str(execute_exc)
+
+                                print(
+                                    f"[TOOL ERROR] {error_message}"
+                                )
+
+                                tool_result = {
+                                    "success": False,
+                                    "error": error_message,
+                                }
+
+                        else:
+                            error_message = (
+                                "Operasi dibatalkan oleh pengguna."
+                            )
+
+                            print(
+                                "[TOOL] Modify dibatalkan oleh pengguna."
+                            )
+
+                            tool_result = {
+                                "success": False,
+                                "error": error_message,
+                            }
+
+                    else:
+                        print(
+                            f"[TOOL ERROR] {error_message}"
+                        )
+
+                        tool_result = {
+                            "success": False,
+                            "error": error_message,
+                        }
 
                 # -------------------------------------------------
                 # Buat function response

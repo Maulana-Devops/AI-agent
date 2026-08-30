@@ -147,3 +147,79 @@ def test_cli_local_router_prioritized_before_offline():
                         # OfflineResponder should NOT be called because LocalRouter took priority
                         mock_resolve.assert_not_called()
                         mock_agent.ask.assert_not_called()
+
+def test_confirm_tool_execution_accepts_yes(monkeypatch):
+    from app.cli import confirm_tool_execution
+
+    monkeypatch.setattr(
+        "builtins.input",
+        lambda _: "y",
+    )
+
+    assert confirm_tool_execution(
+        "write_file",
+        {"path": "test.txt", "content": "hello"},
+    ) is True
+
+
+def test_confirm_tool_execution_rejects_by_default(monkeypatch):
+    from app.cli import confirm_tool_execution
+
+    monkeypatch.setattr(
+        "builtins.input",
+        lambda _: "",
+    )
+
+    assert confirm_tool_execution(
+        "write_file",
+        {"path": "test.txt", "content": "hello"},
+    ) is False
+
+
+def test_confirm_tool_execution_accepts_yes_text(monkeypatch):
+    from app.cli import confirm_tool_execution
+
+    monkeypatch.setattr(
+        "builtins.input",
+        lambda _: "yes",
+    )
+
+    assert confirm_tool_execution(
+        "create_directory",
+        {"path": "/tmp/example"},
+    ) is True
+
+
+def test_confirmed_modify_tool_creates_file(tmp_path):
+    from app.tool_runner import ToolRunner
+
+    runner = ToolRunner()
+
+    target = tmp_path / "confirmed.txt"
+
+    denied = runner.run(
+        "write_file",
+        {
+            "path": str(target),
+            "content": "hello",
+        },
+    )
+
+    assert denied.success is False
+    assert denied.executed is False
+    assert denied.requires_confirmation is True
+    assert not target.exists()
+
+    approved = runner.run(
+        "write_file",
+        {
+            "path": str(target),
+            "content": "hello",
+        },
+        confirmed=True,
+    )
+
+    assert approved.success is True
+    assert approved.executed is True
+    assert target.exists()
+    assert target.read_text() == "hello"
