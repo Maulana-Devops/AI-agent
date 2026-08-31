@@ -148,15 +148,32 @@ class ToolRunner:
                         f"Argument '{name}' harus <= {maximum}"
                     )
 
-            # String minimum length.
+            # String minimum / maximum length.
             if isinstance(value, str):
                 min_length = rules.get("minLength")
+                max_length = rules.get("maxLength")
 
                 if min_length is not None and len(value) < min_length:
                     return (
                         f"Argument '{name}' minimal "
                         f"{min_length} karakter"
                     )
+
+                if max_length is not None and len(value) > max_length:
+                    return (
+                        f"Argument '{name}' maksimal "
+                        f"{max_length} karakter"
+                    )
+
+            # Enumerated values.
+            enum_values = rules.get("enum")
+
+            if enum_values is not None and value not in enum_values:
+                return (
+                    f"Argument '{name}' harus memiliki "
+                    f"nilai yang termasuk dalam enum: "
+                    f"{enum_values}"
+                )
 
         return None
 

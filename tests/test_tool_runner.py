@@ -280,3 +280,164 @@ def test_semantic_validation_happens_before_confirmation(
     assert result.executed is False
     assert result.requires_confirmation is True
     assert not target.exists()
+
+
+def test_schema_enum_is_enforced(monkeypatch):
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(mode):
+        return mode
+
+    original = TOOLS.get("test_enum_tool")
+
+    TOOLS["test_enum_tool"] = {
+        "description": "Test enum validation",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "enum": ["safe", "normal"],
+                },
+            },
+            "required": ["mode"],
+            "additionalProperties": False,
+        },
+    }
+
+    try:
+        runner = ToolRunner()
+
+        invalid = runner.run(
+            "test_enum_tool",
+            {"mode": "dangerous"},
+        )
+
+        assert invalid.success is False
+        assert invalid.executed is False
+        assert "enum" in invalid.error.lower()
+
+        valid = runner.run(
+            "test_enum_tool",
+            {"mode": "safe"},
+        )
+
+        assert valid.success is True
+        assert valid.executed is True
+        assert valid.result == "safe"
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_enum_tool", None)
+        else:
+            TOOLS["test_enum_tool"] = original
+
+
+def test_schema_max_length_is_enforced():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(value):
+        return value
+
+    original = TOOLS.get("test_max_length_tool")
+
+    TOOLS["test_max_length_tool"] = {
+        "description": "Test maxLength validation",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "maxLength": 5,
+                },
+            },
+            "required": ["value"],
+        },
+    }
+
+    try:
+        runner = ToolRunner()
+
+        invalid = runner.run(
+            "test_max_length_tool",
+            {"value": "123456"},
+        )
+
+        assert invalid.success is False
+        assert invalid.executed is False
+        assert "maksimal" in invalid.error.lower()
+
+        valid = runner.run(
+            "test_max_length_tool",
+            {"value": "12345"},
+        )
+
+        assert valid.success is True
+        assert valid.executed is True
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_max_length_tool", None)
+        else:
+            TOOLS["test_max_length_tool"] = original
+
+
+def test_additional_properties_false_is_enforced():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path):
+        return path
+
+    original = TOOLS.get("test_additional_properties_tool")
+
+    TOOLS["test_additional_properties_tool"] = {
+        "description": "Test additionalProperties validation",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    }
+
+    try:
+        runner = ToolRunner()
+
+        invalid = runner.run(
+            "test_additional_properties_tool",
+            {
+                "path": "test.txt",
+                "unexpected": "value",
+            },
+        )
+
+        assert invalid.success is False
+        assert invalid.executed is False
+        assert "tidak dikenal" in invalid.error.lower()
+
+        valid = runner.run(
+            "test_additional_properties_tool",
+            {"path": "test.txt"},
+        )
+
+        assert valid.success is True
+        assert valid.executed is True
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_additional_properties_tool", None)
+        else:
+            TOOLS["test_additional_properties_tool"] = original
