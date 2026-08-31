@@ -441,3 +441,268 @@ def test_additional_properties_false_is_enforced():
             TOOLS.pop("test_additional_properties_tool", None)
         else:
             TOOLS["test_additional_properties_tool"] = original
+
+
+def test_schema_additional_properties_defaults_to_strict():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path):
+        return path
+
+    original = TOOLS.get("test_default_strict_tool")
+
+    TOOLS["test_default_strict_tool"] = {
+        "description": "Test default strict object behavior",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+        },
+    }
+
+    try:
+        result = ToolRunner().run(
+            "test_default_strict_tool",
+            {
+                "path": "/tmp",
+                "unexpected": "value",
+            },
+        )
+
+        assert result.success is False
+        assert result.executed is False
+        assert "tidak dikenal" in result.error.lower()
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_default_strict_tool", None)
+        else:
+            TOOLS["test_default_strict_tool"] = original
+
+
+def test_schema_additional_properties_false_is_strict():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path):
+        return path
+
+    original = TOOLS.get("test_explicit_strict_tool")
+
+    TOOLS["test_explicit_strict_tool"] = {
+        "description": "Test explicit strict object behavior",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    }
+
+    try:
+        result = ToolRunner().run(
+            "test_explicit_strict_tool",
+            {
+                "path": "/tmp",
+                "unexpected": "value",
+            },
+        )
+
+        assert result.success is False
+        assert result.executed is False
+        assert "tidak dikenal" in result.error.lower()
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_explicit_strict_tool", None)
+        else:
+            TOOLS["test_explicit_strict_tool"] = original
+
+
+def test_schema_additional_properties_true_allows_extra_arguments():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path, metadata=None):
+        return {
+            "path": path,
+            "metadata": metadata,
+        }
+
+    original = TOOLS.get("test_permissive_tool")
+
+    TOOLS["test_permissive_tool"] = {
+        "description": "Test permissive object behavior",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+            "additionalProperties": True,
+        },
+    }
+
+    try:
+        result = ToolRunner().run(
+            "test_permissive_tool",
+            {
+                "path": "/tmp",
+                "metadata": {
+                    "source": "test",
+                },
+            },
+        )
+
+        assert result.success is True
+        assert result.executed is True
+        assert result.result["path"] == "/tmp"
+        assert result.result["metadata"] == {
+            "source": "test",
+        }
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_permissive_tool", None)
+        else:
+            TOOLS["test_permissive_tool"] = original
+
+
+def test_schema_additional_properties_false_rejects_extra_arguments():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path):
+        return path
+
+    original = TOOLS.get("test_explicit_false_tool")
+
+    TOOLS["test_explicit_false_tool"] = {
+        "description": "Test explicit false additional properties",
+        "risk": "read-only",
+        "function": fake_tool,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    }
+
+    try:
+        result = ToolRunner().run(
+            "test_explicit_false_tool",
+            {
+                "path": "/tmp",
+                "unexpected": "value",
+            },
+        )
+
+        assert result.success is False
+        assert result.executed is False
+        assert "tidak dikenal" in result.error.lower()
+
+    finally:
+        if original is None:
+            TOOLS.pop("test_explicit_false_tool", None)
+        else:
+            TOOLS["test_explicit_false_tool"] = original
+
+
+def test_schema_additional_properties_contract_matrix():
+    from app.tool_runner import ToolRunner
+    from tools.registry import TOOLS
+
+    def fake_tool(path, **kwargs):
+        return {
+            "path": path,
+            "extra": kwargs,
+        }
+
+    runner = ToolRunner()
+
+    cases = [
+        (
+            "omitted",
+            {},
+            False,
+        ),
+        (
+            "explicit_false",
+            {"additionalProperties": False},
+            False,
+        ),
+        (
+            "explicit_true",
+            {"additionalProperties": True},
+            True,
+        ),
+    ]
+
+    for suffix, extra_schema, should_succeed in cases:
+        tool_name = f"test_additional_properties_{suffix}"
+
+        schema = {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                },
+            },
+            "required": ["path"],
+        }
+
+        schema.update(extra_schema)
+
+        original = TOOLS.get(tool_name)
+
+        TOOLS[tool_name] = {
+            "description": f"Test additionalProperties {suffix}",
+            "risk": "read-only",
+            "function": fake_tool,
+            "parameters": schema,
+        }
+
+        try:
+            result = runner.run(
+                tool_name,
+                {
+                    "path": "/tmp",
+                    "unexpected": "value",
+                },
+            )
+
+            assert result.success is should_succeed
+            assert result.executed is should_succeed
+
+            if should_succeed:
+                assert result.result["extra"]["unexpected"] == "value"
+            else:
+                assert "tidak dikenal" in result.error.lower()
+
+        finally:
+            if original is None:
+                TOOLS.pop(tool_name, None)
+            else:
+                TOOLS[tool_name] = original

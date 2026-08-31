@@ -41,13 +41,23 @@ class ToolRunner:
         required = schema.get("required") or []
 
         # Reject arguments that are not declared by the registry.
-        unknown = sorted(set(arguments) - set(properties))
+        #
+        # JSON Schema semantics:
+        # - omitted / False -> strict object
+        # - True -> allow undeclared properties
+        additional_properties = schema.get(
+            "additionalProperties",
+            False,
+        )
 
-        if unknown:
-            return (
-                "Argument tidak dikenal: "
-                + ", ".join(unknown)
-            )
+        if additional_properties is not True:
+            unknown = sorted(set(arguments) - set(properties))
+
+            if unknown:
+                return (
+                    "Argument tidak dikenal: "
+                    + ", ".join(unknown)
+                )
 
         # Reject missing required arguments.
         missing = [
