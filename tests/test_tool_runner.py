@@ -138,3 +138,145 @@ def test_modify_tool_approval_is_per_action(filesystem_workspace):
     assert still_blocked.executed is False
     assert still_blocked.requires_confirmation is True
     assert not second.exists()
+
+
+def test_unknown_tool_argument_is_rejected(filesystem_workspace):
+    from app.tool_runner import run_tool_result
+
+    target = filesystem_workspace / "unknown-argument"
+
+    result = run_tool_result(
+        "create_directory",
+        {
+            "path": str(target),
+            "unexpected": "value",
+        },
+        confirmed=True,
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "Argument tidak dikenal" in result.error
+    assert not target.exists()
+
+
+def test_required_tool_argument_is_validated_before_execution():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result(
+        "read_file",
+        {},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "Argument wajib belum diberikan" in result.error
+
+
+def test_tool_argument_type_is_validated_before_execution():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result(
+        "git_log",
+        {"limit": "5"},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "harus bertipe integer" in result.error
+
+
+def test_valid_tool_arguments_still_execute(filesystem_workspace):
+    from app.tool_runner import run_tool_result
+
+    target = filesystem_workspace / "valid-arguments"
+
+    result = run_tool_result(
+        "create_directory",
+        {"path": str(target)},
+        confirmed=True,
+    )
+
+    assert result.success is True
+    assert result.executed is True
+    assert target.exists()
+
+
+def test_git_log_rejects_limit_below_minimum():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result(
+        "git_log",
+        {"limit": 0},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "harus >= 1" in result.error
+
+
+def test_git_log_rejects_limit_above_maximum():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result(
+        "git_log",
+        {"limit": 51},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "harus <= 50" in result.error
+
+
+def test_git_log_accepts_boundary_values():
+    from app.tool_runner import run_tool_result
+
+    lower = run_tool_result(
+        "git_log",
+        {"limit": 1},
+    )
+
+    upper = run_tool_result(
+        "git_log",
+        {"limit": 50},
+    )
+
+    assert lower.success is True
+    assert lower.executed is True
+
+    assert upper.success is True
+    assert upper.executed is True
+
+
+def test_search_file_contents_rejects_empty_query():
+    from app.tool_runner import run_tool_result
+
+    result = run_tool_result(
+        "search_file_contents",
+        {"path": ".", "query": ""},
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert "minimal 1 karakter" in result.error
+
+
+def test_semantic_validation_happens_before_confirmation(
+    filesystem_workspace,
+):
+    from app.tool_runner import run_tool_result
+
+    target = filesystem_workspace / "semantic-validation"
+
+    result = run_tool_result(
+        "create_directory",
+        {
+            "path": str(target),
+        },
+        confirmed=False,
+    )
+
+    assert result.success is False
+    assert result.executed is False
+    assert result.requires_confirmation is True
+    assert not target.exists()

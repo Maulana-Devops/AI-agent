@@ -29,3 +29,27 @@ def test_read_only_tools_have_empty_parameters():
     assert names["git_branch"]["parameters"]["properties"] == {}
     assert names["git_diff"]["parameters"]["properties"] == {}
     assert names["git_remote"]["parameters"]["properties"] == {}
+
+
+def test_search_tools_match_python_defaults():
+    from tools.registry import list_tools
+
+    tools = list_tools()
+
+    search_files = tools["search_files"]["parameters"]
+    search_contents = tools["search_file_contents"]["parameters"]
+
+    assert "required" not in search_files
+    assert "required" not in search_contents
+
+
+def test_search_file_contents_documents_non_empty_query_requirement():
+    from tools.registry import list_tools
+
+    schema = list_tools()["search_file_contents"]["parameters"]
+
+    query_description = (
+        schema["properties"]["query"]["description"]
+    )
+
+    assert "empty" in query_description.lower()

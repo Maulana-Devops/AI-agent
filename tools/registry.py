@@ -205,14 +205,13 @@ TOOLS = {
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Directory to search.",
+                    "description": "Directory to search. Defaults to the current workspace.",
                 },
                 "pattern": {
                     "type": "string",
-                    "description": "Filename pattern, such as *.py.",
+                    "description": "Filename pattern, such as *.py. Defaults to *.",
                 },
             },
-            "required": ["path", "pattern"],
         },
     },
     "search_file_contents": {
@@ -224,14 +223,14 @@ TOOLS = {
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Directory to search.",
+                    "description": "Directory to search. Defaults to the current workspace.",
                 },
                 "query": {
                     "type": "string",
-                    "description": "Text to search for.",
+                    "description": "Text to search for. Must not be empty.",
+                    "minLength": 1,
                 },
             },
-            "required": ["path", "query"],
         },
     },
     "git_status": {
@@ -261,7 +260,9 @@ TOOLS = {
             "properties": {
                 "limit": {
                     "type": "integer",
-                    "description": "Maximum number of commits to show. Must be between 1 and 50.",
+                    "description": "Maximum number of commits to show.",
+                    "minimum": 1,
+                    "maximum": 50,
                 },
             },
         },
